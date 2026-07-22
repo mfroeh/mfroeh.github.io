@@ -1,0 +1,50 @@
+title = "Bloggings"
+baseURL = "https://mfroeh.github.io"
+locale = "en-us"
+theme = ["PaperMod"]
+
+[params]
+mainSections = ["posts"]
+author = "mfroeh"
+description = "Various bloggings"
+showReadingTime = true
+showToc = true
+
+# [[menus.main]]
+# name = "About"
+# title = "About the author"
+# pageRef = "/about"
+# weight = 10
+
+[[menus.main]]
+name = "Posts"
+title = "A list of all blog posts on this site"
+pageRef = "/posts"
+weight = 20
+
+[[menus.main]]
+name = "Tags"
+title = "Filter posts by topic"
+pageRef = "/tags"
+weight = 25
+
+[[menus.main]]
+name = "Contact"
+title = "Reach me via email"
+url = "mailto:mfroeh0@pm.com"
+weight = 30
+
+[permalinks]
+posts = "/:year/:month/:slug/"
+
+[taxonomies]
+tag = "tags"
+category = "categories"
+
+[markup.highlight]
+    codeFences = true
+    guessSyntax = true
+    lineNos = false
+    lineNumbersInTable = false
+    noClasses = true
+    style = "gruvbox"
