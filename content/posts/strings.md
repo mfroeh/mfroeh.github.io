@@ -25,13 +25,13 @@ assert_eq!(hello_world, "Hello Wörld");
 
 // 2. [char] vs. String/str and dot operator semantics
 let world_chars: [char; 5] = ['W', 'ö', 'r', 'l', 'd'];
-assert_eq!(world.len(), world_chars.len()); ↯
-assert_eq!(size_of_val(world), size_of_val(&world_chars)); ↯
+assert_eq!(world.len(), world_chars.len()); // ↯ assertion failure
+assert_eq!(size_of_val(world), size_of_val(&world_chars)); // ↯ assertion failure
 
 let mut owned_world: String = String::from(world);
 assert_eq!(owned_world.chars().count(), world_chars.len());
 owned_world.make_ascii_uppercase();
-assert_eq!(owned_world, "WÖRLD"); ↯
+assert_eq!(owned_world, "WÖRLD"); // ↯ assertion failure
 assert_eq!(owned_world, "WöRLD");
 ```
 
@@ -106,13 +106,13 @@ There is one more thing happening in the example: in `assert_eq!(hello_world, "H
 ## 2. [Char] vs. String/str and dot operator semantics
 ```rust
 let world_chars: [char; 5] = ['W', 'ö', 'r', 'l', 'd'];
-assert_eq!(world.len(), world_chars.len()); ↯
-assert_eq!(size_of_val(world), size_of_val(&world_chars)); ↯
+assert_eq!(world.len(), world_chars.len()); // ↯ assertion failure
+assert_eq!(size_of_val(world), size_of_val(&world_chars)); // ↯ assertion failure
 
 let mut owned_world: String = String::from(world);
 assert_eq!(owned_world.chars().count(), world_chars.len());
 owned_world.make_ascii_uppercase();
-assert_eq!(owned_world, "WÖRLD"); ↯
+assert_eq!(owned_world, "WÖRLD"); // ↯ assertion failure
 assert_eq!(owned_world, "WöRLD");
 ```
 Rust has a primitive `char` type. A `char` is a UTF-8 encoded Unicode scalar value (which is a subset of the Unicode code points). Since Unicode scalar values can be up to 4 bytes large, `assert_eq!(size_of::<char>(), 4)`. This is also why the first two assertions of the example fail: `String`/`str` use the maximally efficient UTF-8 encoding of the string they represent, whilst `[char; 5]` is just a simple array, whose size is `5 * size_of::<char>()`.
@@ -151,7 +151,7 @@ Deref coercion and dot operator semantics are incredibly powerful concepts, with
 
 The final example I want to discuss is given in `owned_world.make_ascii_uppercase();`. `str::make_ascii_uppercase` is a function defined on `&mut str`. In addition to `Deref`, `String` implements `DerefMut` which, as the name implies, simply returns `&mut str`. Note that `Deref` is a super-trait of `DerefMut`, so `DerefMut` simply re-uses the `Target` type from `Deref`, which ensures that `Deref` and `DerefMut` are always consistent in their `Target`. The method call thus desugars to `str::make_ascii_uppercase(<String as DerefMut>::deref_mut(&mut owned_world))`.
 
-The potentially surprising thing here is that the resulting string is `"WÖRLD"`, instead of `"WöRLD"`. One might say that the reason is given in the method name, which is correct, but there is also a mechanical reason why this is the only possible outcome for an operation that modifies `&mut str` in place, which is given in the docs of [`String::to_uppercase`](https://doc.rust-lang.org/stable/std/string/struct.String.html#method.to_uppercase): in Unicode, a code point's upper-case value may take up more bytes than the lower-case value. For ASCII, we know that the lower- and upper-case value of any code point is 1 byte, but this does not hold for all characters representable using Unicode. For example: `assert_eq!('ᾨ'.to_uppercase().to_string(), "ὨΙ");`. Since we cannot change which memory location the slice spans, and we only have access to `&mut str <=> &mut [u8]`, we can generally not perform this operation.
+The potentially surprising thing here is that the resulting string is `"WöRLD"` (lower-case 'ö'), instead of `"WÖRLD"`. One might say that the reason is given in the method name, which is correct, but there is also a mechanical reason why this is the only possible outcome for an operation that modifies `&mut str` in place, which is given in the docs of [`String::to_uppercase`](https://doc.rust-lang.org/stable/std/string/struct.String.html#method.to_uppercase): in Unicode, a code point's upper-case value may take up more bytes than the lower-case value. For ASCII, we know that the lower- and upper-case value of any code point is 1 byte, but this does not hold for all characters representable using Unicode. For example: `assert_eq!('ᾨ'.to_uppercase().to_string(), "ὨΙ");`. Since we cannot change which memory location the slice spans, and we only have access to `&mut str <=> &mut [u8]`, we can generally not perform this operation.
 
 ## Other string types
 Apart from `String` and `str`, there are a few other string or string adjacent types:
@@ -160,6 +160,9 @@ Apart from `String` and `str`, there are a few other string or string adjacent t
 * [`std::ffi::CString`](https://doc.rust-lang.org/stable/std/ffi/struct.CString.html) and its slice counterpart [`std::ffi::CStr`](https://doc.rust-lang.org/stable/std/ffi/struct.CStr.html): types that represent C-compatible (null-terminated) strings. You will use this when calling or obtaining results from C code (e.g., libc). You can create a `&'static CStr` from a literal using `c"Hello World"`.
 * [`std::bstr::ByteString`](https://doc.rust-lang.org/stable/std/bstr/struct.ByteString.html) and its slice counterpart [`std::bstr::ByteStr`](https://doc.rust-lang.org/stable/std/bstr/struct.ByteStr.html): types for strings that are not necessarily valid UTF-8. Currently nightly behind `#![feature(bstr)]`.
 * [`std::ascii::Char`](https://doc.rust-lang.org/stable/core/ascii/enum.Char.html): a 1-byte wide `char` type for representing the ASCII subset of Unicode. Useful if you know that the strings you're dealing with are guaranteed ASCII. In that case, `[std::ascii::Char`] can be more safe/convenient to work with than dealing with the `str::as_bytes`. Currently nightly behind `#![feature(ascii_char)]`.
+
+## Changelog
+2026-07-23: Fixed mixup of `"WöRLD"` and `"WÖRLD"` in text. Clarified assertion failures in snippets.
 
 --- 
 [^1]: https://www.charset.org/utf-8
