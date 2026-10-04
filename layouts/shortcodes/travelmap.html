@@ -1,0 +1,48 @@
+{{ $visited := slice "at" "cz" "de" "dk" "es" "ee" "fi" "gb" "it" "lt" "lv" "nl" "no" "pl" "se" }}
+
+<div class="travel-map">
+  <div class="travel-map-wrap">
+    {{ readFile "assets/images/world-map.svg" | safeHTML }}
+    <div class="travel-map-tip" hidden></div>
+  </div>
+</div>
+
+<style>
+.travel-map { width: min(1100px, 94vw); margin: 2rem 0 2rem 50%; transform: translateX(-50%); }
+.travel-map-wrap { position: relative; }
+.travel-map svg { width: 100%; height: auto; display: block; }
+.travel-map svg [id] { fill: #e5e7eb; stroke: #fff; stroke-width: .5; }
+.travel-map svg [id].visited { fill: #f59e0b; }
+.travel-map svg [id]:hover { fill: #ea580c; }
+.travel-map-tip { position: absolute; pointer-events: none; background: rgba(17,24,39,.92); color: #fff; padding: .3rem .55rem; border-radius: .375rem; transform: translate(-50%, calc(-100% - 10px)); }
+</style>
+
+<script>
+(function () {
+  const visited = new Set({{ $visited | jsonify | safeJS }});
+  const names = {};
+  ({{ readFile "assets/images/mapping.csv" | jsonify | safeJS }}).split(/\r?\n/).slice(1).forEach((line) => {
+    const m = line.match(/^"([^"]+)","([^"]+)"$/);
+    if (m) names[m[1].toLowerCase()] = m[2];
+  });
+  const flag = (code) => /^[a-z]{2}$/.test(code) ? String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 97)) : "";
+  const map = document.querySelector(".travel-map");
+  const tip = map.querySelector(".travel-map-tip");
+  map.querySelectorAll("svg [id]").forEach((el) => {
+    const code = el.id.toLowerCase();
+    if (visited.has(code)) el.classList.add("visited");
+    const label = (flag(code) ? flag(code) + " " : "") + (names[code] || code.toUpperCase());
+    const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    title.textContent = label;
+    el.appendChild(title);
+    el.addEventListener("mousemove", (e) => {
+      const r = map.getBoundingClientRect();
+      tip.hidden = false;
+      tip.textContent = label;
+      tip.style.left = (e.clientX - r.left) + "px";
+      tip.style.top = (e.clientY - r.top) + "px";
+    });
+    el.addEventListener("mouseleave", () => { tip.hidden = true; });
+  });
+})();
+</script>

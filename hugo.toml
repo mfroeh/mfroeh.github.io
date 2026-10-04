@@ -10,12 +10,6 @@ description = "Various bloggings"
 showReadingTime = true
 showToc = true
 
-# [[menus.main]]
-# name = "About"
-# title = "About the author"
-# pageRef = "/about"
-# weight = 10
-
 [[menus.main]]
 name = "Posts"
 title = "A list of all blog posts on this site"
@@ -34,6 +28,12 @@ title = "Reach me via email"
 url = "mailto:mfroeh0@pm.com"
 weight = 30
 
+[[menus.main]]
+name = "Misc"
+title = "Misc"
+pageRef = "/misc.md"
+weight = 35
+
 [permalinks]
 posts = "/:year/:month/:slug/"
 
@@ -42,9 +42,9 @@ tag = "tags"
 category = "categories"
 
 [markup.highlight]
-    codeFences = true
-    guessSyntax = true
-    lineNos = false
-    lineNumbersInTable = false
-    noClasses = true
-    style = "gruvbox"
+codeFences = true
+guessSyntax = true
+lineNos = false
+lineNumbersInTable = false
+noClasses = true
+style = "gruvbox"
